@@ -37,14 +37,26 @@ export function TRPCProvider(
   //       render if it suspends and there is no boundary
   const queryClient = getQueryClient();
   const [trpcClient] = useState(() =>
-    trpc.createClient({
-      links: [
-        httpBatchLink({
-          // transformer: superjson, <-- if you use a data transformer
-          url: getUrl(),
-        }),
-      ],
-    })
+      trpc.createClient({
+        links: [
+          httpBatchLink({
+            // transformer: superjson, <-- if you use a data transformer
+            url: getUrl(),
+            headers: async () => {
+              console.log('has window:', 'window' in globalThis)
+              if ('window' in globalThis) {
+                return {}
+              } else {
+                const cookies = (await import('next/headers')).cookies()
+                console.log('cookies', cookies.toString())
+                return {
+                  'Cookie': cookies.toString()
+                }
+              }
+            }
+          }),
+        ],
+      })
   );
   return (
     <trpc.Provider client={trpcClient} queryClient={queryClient}>
